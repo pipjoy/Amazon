@@ -1,3 +1,6 @@
+import os
+import argparse
+
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -9,13 +12,32 @@ import lightgbm as lgb
 from keras.models import Sequential
 from keras.layers import Dense
 
-# Cargar el dataset desde Kaggle
-try:
-    import kagglehub
-    from kagglehub import KaggleDatasetAdapter
-    df = kagglehub.load_dataset(KaggleDatasetAdapter.PANDAS, "karkavelrajaj/amazon-sales-dataset", "amazon.csv")
-except Exception as e:
-    raise RuntimeError("No se pudo cargar el dataset desde Kaggle: %s" % e)
+# Cargar el dataset
+parser = argparse.ArgumentParser(description="Comparación de modelos de regresión")
+parser.add_argument(
+    "--csv-path",
+    default=os.getenv("AMAZON_CSV_PATH"),
+    help="Ruta al archivo CSV local. Si no se proporciona se intentará descargar de Kaggle.",
+)
+args = parser.parse_args()
+
+if args.csv_path:
+    df = pd.read_csv(args.csv_path)
+else:
+    try:
+        import kagglehub
+        from kagglehub import KaggleDatasetAdapter
+
+        df = kagglehub.load_dataset(
+            KaggleDatasetAdapter.PANDAS,
+            "karkavelraj/amazon-sales-dataset",
+            "amazon.csv",
+        )
+    except Exception as e:
+        raise RuntimeError(
+            "No se pudo cargar el dataset desde Kaggle. Use --csv-path o la variable AMAZON_CSV_PATH para especificar un archivo local. Error original: %s"
+            % e
+        )
 
 # Limpieza y transformación de columnas numéricas
 num_cols = {
